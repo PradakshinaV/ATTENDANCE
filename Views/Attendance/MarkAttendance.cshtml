@@ -1,0 +1,152 @@
+@model AttendanceSystem.Controllers.MarkAttendanceViewModel
+@{
+    ViewBag.Title = "Mark Attendance - " + Model.Class.Name;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-clipboard-check"></i> Mark Attendance - @Model.Class.Name</h2>
+    <div>
+        <span class="badge bg-info">@Model.Class.ClassTime</span>
+        <span class="badge bg-secondary">@Model.Class.Room</span>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Today's Attendance - @DateTime.Today.ToString("dddd, MMMM dd, yyyy")</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.Students.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Student Name</th>
+                                    <th>Student ID</th>
+                                    <th>Current Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var student in Model.Students)
+                                {
+                                    var attendance = Model.TodayAttendance.FirstOrDefault(a => a.StudentId == student.Id);
+                                    var currentStatus = attendance?.Status ?? AttendanceSystem.Models.AttendanceStatus.Absent;
+                                    
+                                    <tr>
+                                        <td>
+                                            <strong>@student.FullName</strong>
+                                        </td>
+                                        <td>@student.StudentId</td>
+                                        <td>
+                                            <span class="status-badge status-@currentStatus.ToString().ToLower()">
+                                                @if (attendance != null)
+                                                {
+                                                    @attendance.StatusText
+                                                }
+                                                else
+                                                {
+                                                    <text>Not Marked</text>
+                                                }
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-success btn-sm btn-attendance" 
+                                                        onclick="markAttendance(@student.Id, @Model.Class.Id, 'present')"
+                                                        @(currentStatus == AttendanceSystem.Models.AttendanceStatus.Present ? "disabled" : "")>
+                                                    <i class="fas fa-check"></i> Present
+                                                </button>
+                                                <button type="button" class="btn btn-warning btn-sm btn-attendance" 
+                                                        onclick="markAttendance(@student.Id, @Model.Class.Id, 'left')"
+                                                        @(currentStatus == AttendanceSystem.Models.AttendanceStatus.Left ? "disabled" : "")>
+                                                    <i class="fas fa-walking"></i> Left
+                                                </button>
+                                                <button type="button" class="btn btn-info btn-sm btn-attendance" 
+                                                        onclick="markAttendance(@student.Id, @Model.Class.Id, 'returned')"
+                                                        @(currentStatus != AttendanceSystem.Models.AttendanceStatus.Left ? "disabled" : "")>
+                                                    <i class="fas fa-undo"></i> Returned
+                                                </button>
+                                                <button type="button" class="btn btn-danger btn-sm btn-attendance" 
+                                                        onclick="markAttendance(@student.Id, @Model.Class.Id, 'absent')"
+                                                        @(currentStatus == AttendanceSystem.Models.AttendanceStatus.Absent ? "disabled" : "")>
+                                                    <i class="fas fa-times"></i> Absent
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-user-graduate fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Students in this Class</h5>
+                        <p class="text-muted">Add students to this class to start marking attendance.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Stats</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-number text-success">
+                                @Model.TodayAttendance.Count(a => a.Status == AttendanceSystem.Models.AttendanceStatus.Present)
+                            </div>
+                            <div class="stats-label">Present</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-number text-warning">
+                                @Model.TodayAttendance.Count(a => a.Status == AttendanceSystem.Models.AttendanceStatus.Left)
+                            </div>
+                            <div class="stats-label">Left</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-number text-info">
+                                @Model.TodayAttendance.Count(a => a.Status == AttendanceSystem.Models.AttendanceStatus.Returned)
+                            </div>
+                            <div class="stats-label">Returned</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-number text-danger">
+                                @Model.TodayAttendance.Count(a => a.Status == AttendanceSystem.Models.AttendanceStatus.Absent)
+                            </div>
+                            <div class="stats-label">Absent</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        // Auto-refresh every 30 seconds to update status
+        setInterval(function() {
+            location.reload();
+        }, 30000);
+    </script>
+}

@@ -1,0 +1,142 @@
+@{
+    ViewBag.Title = "Reports";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-chart-bar"></i> Generate Reports</h2>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Attendance Report</h5>
+            </div>
+            <div class="card-body">
+                @using (Html.BeginForm("GenerateReport", "Admin", FormMethod.Post, new { @id = "reportForm" }))
+                {
+                    <div class="mb-3">
+                        <label class="form-label">Select Class</label>
+                        @Html.DropDownList("classId", (SelectList)ViewBag.Classes, "Select Class", new { @class = "form-control", @required = "required" })
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">From Date</label>
+                                <input type="date" name="fromDate" class="form-control" value="@DateTime.Today.AddDays(-30).ToString("yyyy-MM-dd")" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">To Date</label>
+                                <input type="date" name="toDate" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-chart-line"></i> Generate Report
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-primary" onclick="exportAllAttendance()">
+                        <i class="fas fa-download"></i> Export All Attendance
+                    </button>
+                    <button type="button" class="btn btn-outline-success" onclick="viewSystemStats()">
+                        <i class="fas fa-chart-pie"></i> System Statistics
+                    </button>
+                    <button type="button" class="btn btn-outline-info" onclick="viewUserActivity()">
+                        <i class="fas fa-users"></i> User Activity
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">Report Templates</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-warning" onclick="generateMonthlyReport()">
+                        <i class="fas fa-calendar-alt"></i> Monthly Report
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" onclick="generateAbsenteeReport()">
+                        <i class="fas fa-exclamation-triangle"></i> Absentee Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="reportResults" class="mt-4" style="display: none;">
+    <!-- Report results will be loaded here -->
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function() {
+            $('#reportForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                var formData = $(this).serialize();
+                
+                $.ajax({
+                    url: '@Url.Action("GenerateReport", "Admin")',
+                    type: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        $('#reportResults').html(response).show();
+                    },
+                    error: function() {
+                        showAlert('Error generating report', 'danger');
+                    }
+                });
+            });
+        });
+        
+        function exportAllAttendance() {
+            window.open('@Url.Action("Export", "Admin")', '_blank');
+        }
+        
+        function viewSystemStats() {
+            showAlert('System statistics feature coming soon!', 'info');
+        }
+        
+        function viewUserActivity() {
+            showAlert('User activity feature coming soon!', 'info');
+        }
+        
+        function generateMonthlyReport() {
+            var today = new Date();
+            var firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            
+            $('#reportForm input[name="fromDate"]').val(firstDay.toISOString().split('T')[0]);
+            $('#reportForm input[name="toDate"]').val(today.toISOString().split('T')[0]);
+            $('#reportForm').submit();
+        }
+        
+        function generateAbsenteeReport() {
+            var today = new Date();
+            var thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+            
+            $('#reportForm input[name="fromDate"]').val(thirtyDaysAgo.toISOString().split('T')[0]);
+            $('#reportForm input[name="toDate"]').val(today.toISOString().split('T')[0]);
+            $('#reportForm').submit();
+        }
+    </script>
+}

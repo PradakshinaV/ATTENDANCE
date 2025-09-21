@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - Attendance System</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .navbar-brand {
+            font-weight: bold;
+            color: #2c3e50 !important;
+        }
+        .sidebar {
+            min-height: calc(100vh - 56px);
+            background-color: #2c3e50;
+        }
+        .sidebar .nav-link {
+            color: #ecf0f1;
+            padding: 12px 20px;
+            border-radius: 0;
+        }
+        .sidebar .nav-link:hover {
+            background-color: #34495e;
+            color: #fff;
+        }
+        .sidebar .nav-link.active {
+            background-color: #3498db;
+            color: #fff;
+        }
+        .main-content {
+            padding: 20px;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: 600;
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-present { background-color: #d4edda; color: #155724; }
+        .status-left { background-color: #fff3cd; color: #856404; }
+        .status-returned { background-color: #d1ecf1; color: #0c5460; }
+        .status-absent { background-color: #f8d7da; color: #721c24; }
+        .btn-attendance {
+            margin: 2px;
+            min-width: 80px;
+        }
+        .attendance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .stats-card {
+            text-align: center;
+            padding: 20px;
+        }
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+        .stats-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            @Html.ActionLink("Attendance System", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    @if (Request.IsAuthenticated)
+                    {
+                        <li class="nav-item">
+                            @Html.ActionLink("Dashboard", "Index", "Home", null, new { @class = "nav-link" })
+                        </li>
+                    }
+                </ul>
+                <ul class="navbar-nav">
+                    @Html.Partial("_LoginPartial")
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            @if (Request.IsAuthenticated)
+            {
+                <div class="col-md-2 sidebar">
+                    <nav class="nav flex-column">
+                        @{
+                            var user = (System.Security.Claims.ClaimsIdentity)User.Identity;
+                            var role = user.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+                        }
+                        
+                        @if (role == "Admin")
+                        {
+                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"].ToString() == "Admin" ? "active" : "")" href="@Url.Action("Dashboard", "Admin")">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                            <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "ManageUsers" ? "active" : "")" href="@Url.Action("ManageUsers", "Admin")">
+                                <i class="fas fa-users"></i> Manage Users
+                            </a>
+                            <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "ManageStudents" ? "active" : "")" href="@Url.Action("ManageStudents", "Admin")">
+                                <i class="fas fa-user-graduate"></i> Manage Students
+                            </a>
+                            <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "ManageClasses" ? "active" : "")" href="@Url.Action("ManageClasses", "Admin")">
+                                <i class="fas fa-chalkboard"></i> Manage Classes
+                            </a>
+                            <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "active" : "")" href="@Url.Action("Reports", "Admin")">
+                                <i class="fas fa-chart-bar"></i> Reports
+                            </a>
+                        }
+                        else if (role == "Teacher")
+                        {
+                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"].ToString() == "Attendance" ? "active" : "")" href="@Url.Action("Index", "Attendance")">
+                                <i class="fas fa-clipboard-check"></i> Mark Attendance
+                            </a>
+                        }
+                        else if (role == "Student")
+                        {
+                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"].ToString() == "Student" && ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "active" : "")" href="@Url.Action("Dashboard", "Student")">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                            <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "History" ? "active" : "")" href="@Url.Action("History", "Student")">
+                                <i class="fas fa-history"></i> Attendance History
+                            </a>
+                            <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "Profile" ? "active" : "")" href="@Url.Action("Profile", "Student")">
+                                <i class="fas fa-user"></i> Profile
+                            </a>
+                        }
+                    </nav>
+                </div>
+                <div class="col-md-10 main-content">
+                    @RenderBody()
+                </div>
+            }
+            else
+            {
+                <div class="col-12">
+                    @RenderBody()
+                </div>
+            }
+        </div>
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+
+    <script>
+        // Auto-refresh attendance status every 30 seconds
+        setInterval(function() {
+            if (window.location.pathname.includes('MarkAttendance')) {
+                location.reload();
+            }
+        }, 30000);
+
+        // Show success/error messages
+        @if (TempData["Success"] != null)
+        {
+            <text>
+            $(document).ready(function() {
+                showAlert('@TempData["Success"]', 'success');
+            });
+            </text>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <text>
+            $(document).ready(function() {
+                showAlert('@TempData["Error"]', 'danger');
+            });
+            </text>
+        }
+
+        function showAlert(message, type) {
+            var alertHtml = '<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
+                message +
+                '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                '</div>';
+            $('.main-content').prepend(alertHtml);
+        }
+
+        function markAttendance(studentId, classId, status) {
+            $.ajax({
+                url: '@Url.Action("MarkAttendance", "Attendance")',
+                type: 'POST',
+                data: {
+                    studentId: studentId,
+                    classId: classId,
+                    status: status
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showAlert(response.message, 'success');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                },
+                error: function() {
+                    showAlert('An error occurred while marking attendance', 'danger');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+@model AttendanceSystem.Controllers.StudentDashboardViewModel
+@{
+    ViewBag.Title = "Student Dashboard";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-tachometer-alt"></i> Welcome, @Model.Student.FirstName!</h2>
+    <small class="text-muted">Last updated: @DateTime.Now.ToString("HH:mm:ss")</small>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user"></i> My Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Name:</strong> @Model.Student.FullName</p>
+                <p><strong>Student ID:</strong> @Model.Student.StudentId</p>
+                <p><strong>Class:</strong> @Model.Student.Class.Name</p>
+                <p><strong>Email:</strong> @Model.Student.Email</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-calendar-day"></i> Today's Status</h5>
+            </div>
+            <div class="card-body text-center">
+                @if (Model.TodayAttendance != null)
+                {
+                    <div class="mb-3">
+                        <span class="status-badge status-@Model.TodayAttendance.Status.ToString().ToLower() fs-4">
+                            @Model.TodayAttendance.StatusText
+                        </span>
+                    </div>
+                    <p class="text-muted mb-0">
+                        Last updated: @Model.TodayAttendance.UpdatedDate?.ToString("HH:mm:ss") ?? Model.TodayAttendance.CreatedDate.ToString("HH:mm:ss")
+                    </p>
+                }
+                else
+                {
+                    <div class="mb-3">
+                        <span class="status-badge status-absent fs-4">
+                            Not Marked
+                        </span>
+                    </div>
+                    <p class="text-muted mb-0">No attendance marked for today</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-pie"></i> This Month's Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-number text-success">
+                                @Model.MonthlyStats.GetValueOrDefault("Present", 0)
+                            </div>
+                            <div class="stats-label">Present</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-number text-warning">
+                                @Model.MonthlyStats.GetValueOrDefault("Left", 0)
+                            </div>
+                            <div class="stats-label">Left</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-number text-info">
+                                @Model.MonthlyStats.GetValueOrDefault("Returned", 0)
+                            </div>
+                            <div class="stats-label">Returned</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-number text-danger">
+                                @Model.MonthlyStats.GetValueOrDefault("Absent", 0)
+                            </div>
+                            <div class="stats-label">Absent</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-history"></i> Recent Attendance History</h5>
+                @Html.ActionLink("View All", "History", "Student", null, new { @class = "btn btn-outline-primary btn-sm" })
+            </div>
+            <div class="card-body">
+                @if (Model.RecentAttendance.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Class</th>
+                                    <th>Status</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var attendance in Model.RecentAttendance)
+                                {
+                                    <tr>
+                                        <td>@attendance.Date.ToString("MMM dd, yyyy")</td>
+                                        <td>@attendance.Class.Name</td>
+                                        <td>
+                                            <span class="status-badge status-@attendance.Status.ToString().ToLower()">
+                                                @attendance.StatusText
+                                            </span>
+                                        </td>
+                                        <td>@attendance.CreatedDate.ToString("HH:mm:ss")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-clipboard fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Recent History</h5>
+                        <p class="text-muted">Your attendance history will appear here.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        // Auto-refresh dashboard every 30 seconds
+        setInterval(function() {
+            location.reload();
+        }, 30000);
+    </script>
+}

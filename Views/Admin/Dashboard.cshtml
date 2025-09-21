@@ -1,0 +1,140 @@
+@model AttendanceSystem.Controllers.AdminDashboardViewModel
+@{
+    ViewBag.Title = "Admin Dashboard";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h2>
+    <small class="text-muted">Last updated: @DateTime.Now.ToString("HH:mm:ss")</small>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-user-graduate fa-2x mb-2"></i>
+                <h3 class="mb-0">@Model.TotalStudents</h3>
+                <p class="mb-0">Total Students</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-chalkboard-teacher fa-2x mb-2"></i>
+                <h3 class="mb-0">@Model.TotalTeachers</h3>
+                <p class="mb-0">Total Teachers</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-chalkboard fa-2x mb-2"></i>
+                <h3 class="mb-0">@Model.TotalClasses</h3>
+                <p class="mb-0">Active Classes</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-clipboard-check fa-2x mb-2"></i>
+                <h3 class="mb-0">@Model.TotalAttendanceToday</h3>
+                <p class="mb-0">Today's Records</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history"></i> Recent Attendance Activity</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.RecentAttendance.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Class</th>
+                                    <th>Status</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var attendance in Model.RecentAttendance)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@attendance.Student.FullName</strong><br>
+                                            <small class="text-muted">@attendance.Student.StudentId</small>
+                                        </td>
+                                        <td>@attendance.Class.Name</td>
+                                        <td>
+                                            <span class="status-badge status-@attendance.Status.ToString().ToLower()">
+                                                @attendance.StatusText
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @attendance.CreatedDate.ToString("HH:mm:ss")
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-clipboard fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Recent Activity</h5>
+                        <p class="text-muted">No attendance has been marked today yet.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-tools"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    @Html.ActionLink("Manage Users", "ManageUsers", "Admin", null, new { @class = "btn btn-outline-primary" })
+                    @Html.ActionLink("Manage Students", "ManageStudents", "Admin", null, new { @class = "btn btn-outline-success" })
+                    @Html.ActionLink("Manage Classes", "ManageClasses", "Admin", null, new { @class = "btn btn-outline-info" })
+                    @Html.ActionLink("Generate Reports", "Reports", "Admin", null, new { @class = "btn btn-outline-warning" })
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> System Info</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Current Date:</strong> @DateTime.Now.ToString("dddd, MMMM dd, yyyy")</p>
+                <p><strong>Current Time:</strong> @DateTime.Now.ToString("HH:mm:ss")</p>
+                <p><strong>Auto-mark Absent:</strong> 5 minutes after leaving</p>
+                <p><strong>System Status:</strong> <span class="badge bg-success">Online</span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        // Auto-refresh dashboard every 60 seconds
+        setInterval(function() {
+            location.reload();
+        }, 60000);
+    </script>
+}
